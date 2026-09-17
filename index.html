@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
+
+    <title>Device Verification</title>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            font-family:
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Arial,
+                sans-serif;
+
+            background:
+                radial-gradient(
+                    circle at top,
+                    #182238 0%,
+                    #0b0f18 45%,
+                    #06080d 100%
+                );
+
+            color: #ffffff;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            overflow: hidden;
+        }
+
+        .container {
+            width: calc(100% - 32px);
+            max-width: 430px;
+            text-align: center;
+        }
+
+        .card {
+            background: rgba(18, 24, 38, 0.88);
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.08);
+
+            border-radius: 24px;
+
+            padding:
+                38px 25px 32px;
+
+            box-shadow:
+                0 20px 60px rgba(0, 0, 0, 0.45),
+                inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        .icon-wrapper {
+            width: 94px;
+            height: 94px;
+
+            margin:
+                0 auto 24px;
+
+            border-radius: 50%;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            background:
+                rgba(59, 130, 246, 0.12);
+
+            border:
+                1px solid
+                rgba(59, 130, 246, 0.25);
+        }
+
+        .shield {
+            width: 48px;
+            height: 54px;
+            position: relative;
+        }
+
+        .shield::before {
+            content: "";
+
+            position: absolute;
+            inset: 0;
+
+            background: #3b82f6;
+
+            clip-path: polygon(
+                50% 0%,
+                92% 15%,
+                92% 52%,
+                80% 76%,
+                50% 100%,
+                20% 76%,
+                8% 52%,
+                8% 15%
+            );
+        }
+
+        .shield::after {
+            content: "✓";
+
+            position: absolute;
+            inset: 0;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: white;
+
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        h1 {
+            font-size: 25px;
+            line-height: 1.25;
+
+            margin-bottom: 12px;
+
+            font-weight: 700;
+        }
+
+        .description {
+            color: #9ca8ba;
+
+            font-size: 15px;
+            line-height: 1.55;
+
+            margin-bottom: 28px;
+        }
+
+        .loader {
+            width: 46px;
+            height: 46px;
+
+            margin:
+                0 auto 22px;
+
+            border-radius: 50%;
+
+            border:
+                4px solid
+                rgba(255, 255, 255, 0.1);
+
+            border-top-color: #3b82f6;
+
+            animation:
+                spin 0.85s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .status {
+            font-size: 14px;
+            color: #8793a6;
+
+            min-height: 21px;
+        }
+
+        .result-icon {
+            font-size: 55px;
+            line-height: 1;
+
+            margin-bottom: 20px;
+        }
+
+        .success .result-icon {
+            color: #22c55e;
+        }
+
+        .error .result-icon {
+            color: #ef4444;
+        }
+
+        .info .result-icon {
+            color: #3b82f6;
+        }
+
+        .success h1 {
+            color: #22c55e;
+        }
+
+        .error h1 {
+            color: #ef4444;
+        }
+
+        .info h1 {
+            color: #3b82f6;
+        }
+
+        .message {
+            color: #aeb8c8;
+
+            font-size: 15px;
+            line-height: 1.6;
+
+            white-space: pre-line;
+
+            margin-bottom: 22px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .small-text {
+            margin-top: 22px;
+
+            color: #5f6b7d;
+
+            font-size: 11px;
+        }
+
+        /* ==========================================
+           RETURN TO BOT
+           ========================================== */
+
+        .return-button {
+            width: 100%;
+
+            border: none;
+            outline: none;
+
+            padding: 13px 18px;
+
+            border-radius: 12px;
+
+            background: #3b82f6;
+
+            color: #ffffff;
+
+            font-size: 15px;
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition:
+                transform 0.15s ease,
+                opacity 0.15s ease;
+        }
+
+        .return-button:active {
+            transform: scale(0.98);
+        }
+
+        .redirect-text {
+            margin-top: 12px;
+
+            color: #5f6b7d;
+
+            font-size: 11px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- ============================== -->
+    <!-- LOADING SCREEN                 -->
+    <!-- ============================== -->
+
+    <div
+        class="card"
+        id="loadingScreen"
+    >
+
+        <div class="icon-wrapper">
+            <div class="shield"></div>
+        </div>
+
+        <h1>
+            Verifying Device
+        </h1>
+
+        <p class="description">
+            Please wait while we securely verify your Telegram account and device.
+        </p>
+
+        <div class="loader"></div>
+
+        <div
+            class="status"
+            id="loadingStatus"
+        >
+            Connecting to verification server...
+        </div>
+
+        <div class="small-text">
+            Secure Telegram verification
+        </div>
+
+    </div>
+
+
+    <!-- ============================== -->
+    <!-- RESULT SCREEN                  -->
+    <!-- ============================== -->
+
+    <div
+        class="card hidden"
+        id="resultScreen"
+    >
+
+        <div
+            class="result-icon"
+            id="resultIcon"
+        ></div>
+
+        <h1
+            id="resultTitle"
+        ></h1>
+
+        <p
+            class="message"
+            id="resultMessage"
+        ></p>
+
+
+        <!-- RETURN BUTTON -->
+
+        <button
+            class="return-button"
+            id="returnButton"
+            type="button"
+            onclick="returnToBot()"
+        >
+            Return to Bot
+        </button>
+
+
+        <div
+            class="redirect-text"
+            id="redirectText"
+        >
+            Returning automatically in 5 seconds...
+        </div>
+
+
+        <div class="small-text">
+            Telegram Device Verification
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+"use strict";
+
+
+// ==================================================
+// TELEGRAM
+// ==================================================
+
+const tg =
+    window.Telegram &&
+    window.Telegram.WebApp;
+
+
+// ==================================================
+// API
+// ==================================================
+
+const API_URL =
+    "https://tg-device-guard.lovable.app/api/public/tg-client/verify.php";
+
+
+// ==================================================
+// RETURN URL
+// ==================================================
+
+const RETURN_URL =
+    "https://omg10.com/4/11820394";
+
+
+// ==================================================
+// REDIRECT TIMER
+// ==================================================
+
+let redirectTimer = null;
+
+
+// ==================================================
+// TELEGRAM INITIALIZATION
+// ==================================================
+
+if (tg) {
+
+    try {
+
+        tg.ready();
+
+        tg.expand();
+
+    } catch (error) {
+
+        console.log(
+            "Telegram initialization error:",
+            error
+        );
+
+    }
+
+}
+
+
+// ==================================================
+// URL PARAMETERS
+// ==================================================
+
+const params =
+    new URLSearchParams(
+        window.location.search
+    );
+
+
+const botHash =
+    params.get("bot_hash");
+
+
+const botUsername =
+    params.get("bot") || "";
+
+
+// ==================================================
+// LOADING STATUS
+// ==================================================
+
+function setLoadingStatus(text) {
+
+    const element =
+        document.getElementById(
+            "loadingStatus"
+        );
+
+
+    if (element) {
+
+        element.textContent =
+            text;
+
+    }
+
+}
+
+
+// ==================================================
+// SHOW RESULT
+// ==================================================
+
+function showResult(
+    status,
+    title,
+    message
+) {
+
+    const loadingScreen =
+        document.getElementById(
+            "loadingScreen"
+        );
+
+
+    const resultScreen =
+        document.getElementById(
+            "resultScreen"
+        );
+
+
+    const resultIcon =
+        document.getElementById(
+            "resultIcon"
+        );
+
+
+    const resultTitle =
+        document.getElementById(
+            "resultTitle"
+        );
+
+
+    const resultMessage =
+        document.getElementById(
+            "resultMessage"
+        );
+
+
+    loadingScreen.classList.add(
+        "hidden"
+    );
+
+
+    resultScreen.classList.remove(
+        "hidden"
+    );
+
+
+    resultScreen.classList.remove(
+        "success",
+        "error",
+        "info"
+    );
+
+
+    if (status === "success") {
+
+        resultScreen.classList.add(
+            "success"
+        );
+
+        resultIcon.textContent =
+            "✓";
+
+    }
+
+    else if (status === "error") {
+
+        resultScreen.classList.add(
+            "error"
+        );
+
+        resultIcon.textContent =
+            "✕";
+
+    }
+
+    else {
+
+        resultScreen.classList.add(
+            "info"
+        );
+
+        resultIcon.textContent =
+            "✓";
+
+    }
+
+
+    resultTitle.textContent =
+        title ||
+        "Verification Result";
+
+
+    resultMessage.textContent =
+        message ||
+        "";
+
+
+    // ------------------------------------------
+    // START 5 SECOND REDIRECT
+    // ------------------------------------------
+
+    startAutoRedirect();
+
+}
+
+
+// ==================================================
+// RETURN TO BOT
+// ==================================================
+
+function returnToBot() {
+
+    if (redirectTimer) {
+
+        clearInterval(
+            redirectTimer
+        );
+
+        redirectTimer = null;
+
+    }
+
+
+    window.location.href =
+        RETURN_URL;
+
+}
+
+
+// ==================================================
+// 5 SECOND AUTO REDIRECT
+// ==================================================
+
+function startAutoRedirect() {
+
+    if (redirectTimer) {
+
+        clearInterval(
+            redirectTimer
+        );
+
+    }
+
+
+    let seconds = 5;
+
+
+    const redirectText =
+        document.getElementById(
+            "redirectText"
+        );
+
+
+    redirectText.textContent =
+        "Returning automatically in 5 seconds...";
+
+
+    redirectTimer =
+        setInterval(
+            function () {
+
+                seconds--;
+
+
+                if (seconds <= 0) {
+
+                    clearInterval(
+                        redirectTimer
+                    );
+
+                    redirectTimer = null;
+
+
+                    window.location.href =
+                        RETURN_URL;
+
+                    return;
+
+                }
+
+
+                redirectText.textContent =
+                    "Returning automatically in " +
+                    seconds +
+                    " seconds...";
+
+            },
+            1000
+        );
+
+}
+
+
+// ==================================================
+// SHA-256
+// ==================================================
+
+async function sha256(text) {
+
+    const encoder =
+        new TextEncoder();
+
+
+    const data =
+        encoder.encode(text);
+
+
+    const hashBuffer =
+        await crypto.subtle.digest(
+            "SHA-256",
+            data
+        );
+
+
+    const hashArray =
+        Array.from(
+            new Uint8Array(
+                hashBuffer
+            )
+        );
+
+
+    return hashArray
+        .map(
+            byte =>
+                byte
+                    .toString(16)
+                    .padStart(2, "0")
+        )
+        .join("");
+
+}
+
+
+// ==================================================
+// TELEGRAM DEVICE ID
+// ==================================================
+
+async function getTelegramDeviceId() {
+
+    try {
+
+        if (
+            !tg ||
+            !tg.BiometricManager
+        ) {
+
+            return null;
+
+        }
+
+
+        await new Promise(
+            resolve => {
+
+                try {
+
+                    tg.BiometricManager.init(
+                        function () {
+
+                            resolve();
+
+                        }
+                    );
+
+                }
+
+                catch (error) {
+
+                    resolve();
+
+                }
+
+            }
+        );
+
+
+        const deviceId =
+            tg.BiometricManager.deviceId;
+
+
+        if (
+            deviceId &&
+            typeof deviceId === "string" &&
+            deviceId.length > 0
+        ) {
+
+            return (
+                "tg-device-" +
+                deviceId
+            );
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.log(
+            "Telegram device ID unavailable:",
+            error
+        );
+
+    }
+
+
+    return null;
+
+}
+
+
+// ==================================================
+// DEVICE FINGERPRINT
+// ==================================================
+
+async function getDeviceFingerprint() {
+
+    try {
+
+        // ------------------------------------------
+        // Timezone
+        // ------------------------------------------
+
+        let timezone = "";
+
+        try {
+
+            timezone =
+                Intl
+                    .DateTimeFormat()
+                    .resolvedOptions()
+                    .timeZone || "";
+
+        }
+
+        catch (error) {
+
+            timezone = "";
+
+        }
+
+
+        // ------------------------------------------
+        // Language
+        // ------------------------------------------
+
+        const language =
+            navigator.language || "";
+
+
+        // ------------------------------------------
+        // Languages
+        // ------------------------------------------
+
+        const languages =
+            Array.isArray(
+                navigator.languages
+            )
+                ? navigator.languages.join(",")
+                : "";
+
+
+        // ------------------------------------------
+        // Screen information
+        // ------------------------------------------
+
+        const screenData = [
+
+            screen.width || "",
+
+            screen.height || "",
+
+            screen.availWidth || "",
+
+            screen.availHeight || "",
+
+            screen.colorDepth || "",
+
+            screen.pixelDepth || ""
+
+        ].join(",");
+
+
+        // ------------------------------------------
+        // Navigator information
+        // ------------------------------------------
+
+        const navigatorData = [
+
+            navigator.userAgent || "",
+
+            navigator.platform || "",
+
+            navigator.hardwareConcurrency || "",
+
+            navigator.deviceMemory || "",
+
+            navigator.maxTouchPoints || ""
+
+        ].join("|");
+
+
+        // ------------------------------------------
+        // WebGL information
+        // ------------------------------------------
+
+        let webglData = "";
+
+
+        try {
+
+            const canvas =
+                document.createElement(
+                    "canvas"
+                );
+
+
+            const gl =
+                canvas.getContext(
+                    "webgl"
+                ) ||
+                canvas.getContext(
+                    "experimental-webgl"
+                );
+
+
+            if (gl) {
+
+                const debugInfo =
+                    gl.getExtension(
+                        "WEBGL_debug_renderer_info"
+                    );
+
+
+                if (debugInfo) {
+
+                    const vendor =
+                        gl.getParameter(
+                            debugInfo.UNMASKED_VENDOR_WEBGL
+                        );
+
+
+                    const renderer =
+                        gl.getParameter(
+                            debugInfo.UNMASKED_RENDERER_WEBGL
+                        );
+
+
+                    webglData =
+                        String(vendor) +
+                        "|" +
+                        String(renderer);
+
+                }
+
+            }
+
+        }
+
+        catch (error) {
+
+            webglData = "";
+
+        }
+
+
+        // ------------------------------------------
+        // Combine fingerprint
+        // ------------------------------------------
+
+        const fingerprintSource = [
+
+            navigatorData,
+
+            language,
+
+            languages,
+
+            timezone,
+
+            screenData,
+
+            webglData
+
+        ].join("||");
+
+
+        // ------------------------------------------
+        // Hash
+        // ------------------------------------------
+
+        const hash =
+            await sha256(
+                fingerprintSource
+            );
+
+
+        return (
+            "fingerprint-" +
+            hash
+        );
+
+    }
+
+    catch (error) {
+
+        console.log(
+            "Fingerprint failed:",
+            error
+        );
+
+
+        return null;
+
+    }
+
+}
+
+
+// ==================================================
+// LOCAL FALLBACK
+// ==================================================
+
+function getLocalFallbackDeviceId() {
+
+    try {
+
+        let deviceId =
+            localStorage.getItem(
+                "tg_device_fallback"
+            );
+
+
+        if (!deviceId) {
+
+            if (
+                crypto &&
+                typeof crypto.randomUUID ===
+                    "function"
+            ) {
+
+                deviceId =
+                    crypto.randomUUID();
+
+            }
+
+            else {
+
+                deviceId =
+                    Date.now()
+                        .toString(36) +
+                    "-" +
+                    Math.random()
+                        .toString(36)
+                        .substring(2);
+
+            }
+
+
+            localStorage.setItem(
+                "tg_device_fallback",
+                deviceId
+            );
+
+        }
+
+
+        return (
+            "fallback-" +
+            deviceId
+        );
+
+    }
+
+    catch (error) {
+
+        return (
+            "fallback-" +
+            Date.now()
+                .toString(36) +
+            "-" +
+            Math.random()
+                .toString(36)
+                .substring(2)
+        );
+
+    }
+
+}
+
+
+// ==================================================
+// GET DEVICE ID
+// ==================================================
+
+async function getDeviceId() {
+
+    // ------------------------------------------------
+    // IMPORTANT:
+    //
+    // We intentionally use the fingerprint FIRST.
+    //
+    // This is a diagnostic test to determine whether
+    // both Telegram accounts running on the same phone
+    // produce the same browser/device fingerprint.
+    // ------------------------------------------------
+
+    const fingerprint =
+        await getDeviceFingerprint();
+
+
+    const fallback =
+        getLocalFallbackDeviceId();
+
+
+    const telegramDeviceId =
+        await getTelegramDeviceId();
+
+
+    // ----------------------------------------------
+    // DEBUG INFORMATION
+    // ----------------------------------------------
+
+    console.log(
+        "========== DEVICE DEBUG =========="
+    );
+
+
+    console.log(
+        "Bot hash:",
+        botHash
+    );
+
+
+    console.log(
+        "Telegram device ID:",
+        telegramDeviceId
+    );
+
+
+    console.log(
+        "Fingerprint:",
+        fingerprint
+    );
+
+
+    console.log(
+        "Local fallback:",
+        fallback
+    );
+
+
+    console.log(
+        "=================================="
+    );
+
+
+    // ----------------------------------------------
+    // USE FINGERPRINT FIRST
+    // ----------------------------------------------
+
+    if (fingerprint) {
+
+        console.log(
+            "Using device fingerprint"
+        );
+
+
+        return fingerprint;
+
+    }
+
+
+    // ----------------------------------------------
+    // TELEGRAM DEVICE ID
+    // ----------------------------------------------
+
+    if (telegramDeviceId) {
+
+        console.log(
+            "Using Telegram device identifier"
+        );
+
+
+        return telegramDeviceId;
+
+    }
+
+
+    // ----------------------------------------------
+    // LOCAL FALLBACK
+    // ----------------------------------------------
+
+    console.log(
+        "Using local fallback identifier"
+    );
+
+
+    return fallback;
+
+}
+
+
+// ==================================================
+// VERIFY DEVICE
+// ==================================================
+
+async function verifyDevice() {
+
+    try {
+
+        // ------------------------------------------
+        // Telegram check
+        // ------------------------------------------
+
+        if (!tg) {
+
+            showResult(
+                "error",
+                "Telegram Required",
+                "Please open this verification page from Telegram."
+            );
+
+            return;
+
+        }
+
+
+        // ------------------------------------------
+        // Bot hash check
+        // ------------------------------------------
+
+        if (!botHash) {
+
+            showResult(
+                "error",
+                "Invalid Verification Link",
+                "The verification link is missing the required bot information."
+            );
+
+            return;
+
+        }
+
+
+        // ------------------------------------------
+        // Telegram initData
+        // ------------------------------------------
+
+        const initData =
+            tg.initData;
+
+
+        if (
+            !initData ||
+            typeof initData !== "string" ||
+            initData.length === 0
+        ) {
+
+            showResult(
+                "error",
+                "Telegram Data Missing",
+                "Telegram verification data could not be obtained. Please close this page and open the verification button again from Telegram."
+            );
+
+            return;
+
+        }
+
+
+        setLoadingStatus(
+            "Creating secure device identifier..."
+        );
+
+
+        // ------------------------------------------
+        // Device ID
+        // ------------------------------------------
+
+        const deviceId =
+            await getDeviceId();
+
+
+        if (
+            !deviceId ||
+            typeof deviceId !== "string"
+        ) {
+
+            showResult(
+                "error",
+                "Device Identification Failed",
+                "A device identifier could not be created. Please try again."
+            );
+
+            return;
+
+        }
+
+
+        console.log(
+            "FINAL DEVICE ID SENT TO SERVER:",
+            deviceId
+        );
+
+
+        setLoadingStatus(
+            "Checking your device..."
+        );
+
+
+        // ------------------------------------------
+        // Request body
+        // ------------------------------------------
+
+        const requestBody = {
+
+            bot_hash:
+                botHash,
+
+            init_data:
+                initData,
+
+            device_id:
+                deviceId
+
+        };
+
+
+        console.log(
+            "Verification request prepared."
+        );
+
+
+        // ------------------------------------------
+        // API request
+        // ------------------------------------------
+
+        const response =
+            await fetch(
+                API_URL,
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json",
+
+                        "Accept":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify(
+                            requestBody
+                        )
+
+                }
+            );
+
+
+        setLoadingStatus(
+            "Processing verification result..."
+        );
+
+
+        // ------------------------------------------
+        // Parse response
+        // ------------------------------------------
+
+        let data;
+
+
+        try {
+
+            data =
+                await response.json();
+
+        }
+
+        catch (error) {
+
+            showResult(
+                "error",
+                "Server Error",
+                "The verification server returned an invalid response."
+            );
+
+            return;
+
+        }
+
+
+        console.log(
+            "Verification response:",
+            data
+        );
+
+
+        // ------------------------------------------
+        // Response fields
+        // ------------------------------------------
+
+        const status =
+            data.status;
+
+
+        const title =
+            data.title;
+
+
+        const message =
+            data.message;
+
+
+        // ------------------------------------------
+        // Validate status
+        // ------------------------------------------
+
+        if (
+            status !== "success" &&
+            status !== "info" &&
+            status !== "error"
+        ) {
+
+            showResult(
+                "error",
+                "Verification Error",
+                "The verification server returned an unknown status."
+            );
+
+            return;
+
+        }
+
+
+        // ------------------------------------------
+        // Display result
+        // ------------------------------------------
+
+        showResult(
+            status,
+            title,
+            message
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Verification error:",
+            error
+        );
+
+
+        showResult(
+            "error",
+            "Connection Error",
+            "Could not connect to the verification server. Please check your internet connection and try again."
+        );
+
+    }
+
+}
+
+
+// ==================================================
+// START
+// ==================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        setTimeout(
+            verifyDevice,
+            500
+        );
+
+    }
+);
+
+</script>
+
+</body>
+</html>
